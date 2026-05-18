@@ -12,40 +12,39 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSignin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignin = async (e: any) => {
+  e.preventDefault()
 
-    e.preventDefault()
+  setLoading(true)
 
-    setLoading(true)
+  const email = e.target.email.value
+  const password = e.target.password.value
 
-const form = e.currentTarget
-
-
-    const email = form.email.value
-    const password = form.password.value
-
-    const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    if (error) {
-      toast.error(error.message)
-      setLoading(false)
-      return
-    }
-
-    toast.success('Logged In Successfully')
-
-    form.reset()
-
-    setTimeout(() => {
-      router.push('/')
-      router.refresh()
-    }, 1500)
-
+  if (error) {
+    toast.error(error.message)
     setLoading(false)
+    return
   }
+
+  if (!data.user.email_confirmed_at) {
+    toast.error('Please verify your email first')
+    await supabase.auth.signOut()
+    setLoading(false)
+    return
+  }
+
+  toast.success('Login Successful')
+
+  window.location.href = '/'
+
+  setLoading(false)
+}
 
   return (
     <>
